@@ -10,3 +10,5 @@ edition = "2018"
 lazy_static = "1.4.0"
 crossbeam-channel = "0.4.2"
 glutin = "0.24.0"
+ezgl = { git = "https://github.com/Crocodoctopus/Ezgl" }
+nalgebra = "0.19.0"

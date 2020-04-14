@@ -2,7 +2,7 @@ use crate::common::*;
 
 pub struct RenderState {
     // kill the render thread
-    pub kill: bool,
+    pub exit: bool,
 
     // just the camera folks, move along
     pub camera: Vec4<f32>,

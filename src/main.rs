@@ -51,15 +51,18 @@ fn main() {
 
     // input "thread" (forward events ot update)
     events_loop.run(move |event, _, out| {
-        let event = match map_event(event) {
-            Some(e) => e,
-            None => return (),
-        };
+        // end the loop on any "window destroyed" events
+        if let glutin::event::Event::WindowEvent {
+            event: glutin::event::WindowEvent::Destroyed,
+            ..
+        } = event
+        {
+            *out = glutin::event_loop::ControlFlow::Exit
+        }
 
-        use glutin::event_loop::ControlFlow;
-        match input_s.send(event) {
-            Ok(_) => {}
-            Err(_) => *out = ControlFlow::Exit,
+        // map and forward the event to the update thread
+        if let Some(e) = map_event(event) {
+            input_s.send(e);
         }
     });
 }
@@ -71,8 +74,11 @@ fn map_event(event: glutin::event::Event<()>) -> Option<crate::update::event::Ev
     use glutin::event::KeyboardInput;
     use glutin::event::WindowEvent;
 
+    // https://docs.rs/glutin/0.24.0/glutin/event/enum.WindowEvent.html
     match event {
         glutin::event::Event::WindowEvent { event, .. } => match event {
+            WindowEvent::CloseRequested => return Some(Event::Exit),
+
             WindowEvent::CursorMoved {
                 position: PhysicalPosition { x, y },
                 ..

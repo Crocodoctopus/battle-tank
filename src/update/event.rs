@@ -35,5 +35,6 @@ pub enum Event {
     KeyDown(Key),
     KeyUp(Key),
     MouseMove(f32, f32),
+    Exit,
     Invalid,
 }

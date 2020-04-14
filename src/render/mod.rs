@@ -48,6 +48,10 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
 
     // process frames sent from update
     for (i, frame) in render_r.iter().enumerate() {
+        if frame.exit {
+            break;
+        }
+
         assert!(frame.sprite_xys.len() == frame.sprite_uvs.len());
         assert!(frame.sprite_xys.len() < MAX_SPRITES);
 

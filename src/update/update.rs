@@ -1,15 +1,29 @@
+use super::event::Event;
 use crate::common::*;
 use crate::render::render_state::RenderState;
 
-pub(super) struct State {}
+pub(super) struct State {
+    exit: bool,
+}
 
 impl State {
     pub(super) fn new() -> Self {
-        Self {}
+        Self { exit: false }
     }
 
-    #[allow(dead_code)]
-    pub(super) fn pre_step(&mut self, _timestamp: u64) {}
+    pub(super) fn exit(&self) -> bool {
+        self.exit
+    }
+
+    pub(super) fn pre_step(&mut self, _timestamp: u64, events: impl Iterator<Item = Event>) {
+        use super::event::Key;
+        for event in events {
+            match event {
+                Event::Exit => self.exit = true,
+                _ => {}
+            }
+        }
+    }
 
     pub(super) fn step(&mut self, _timestamp: u64, _simtime: u64) {}
 
@@ -18,7 +32,7 @@ impl State {
     pub(super) fn render_prep(&self) -> RenderState {
         // temporary frame to test rendering
         RenderState {
-            kill: false,
+            exit: self.exit,
 
             camera: Vec4(0., 0., 144., 144.),
 

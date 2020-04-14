@@ -7,7 +7,7 @@ use update::State;
 pub mod event;
 mod update;
 
-pub fn update_thread(render_s: Sender<RenderState>, _input_r: Receiver<Event>) {
+pub fn update_thread(render_s: Sender<RenderState>, input_r: Receiver<Event>) {
     // state setup
     let mut state = State::new();
 
@@ -18,7 +18,7 @@ pub fn update_thread(render_s: Sender<RenderState>, _input_r: Receiver<Event>) {
     let mut game_timestamp = crate::time::get_microseconds_as_u64();
     loop {
         // pre-step
-        state.pre_step(game_timestamp);
+        state.pre_step(game_timestamp, input_r.try_iter());
 
         // step (part 1)
         let real_timestamp = crate::time::get_microseconds_as_u64();
@@ -36,5 +36,10 @@ pub fn update_thread(render_s: Sender<RenderState>, _input_r: Receiver<Event>) {
 
         // render prep
         render_s.send(state.render_prep()).unwrap();
+
+        // break on exit flag
+        if state.exit() {
+            break;
+        }
     }
 }

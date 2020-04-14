@@ -59,10 +59,6 @@ fn main() {
 
             camera: Vec4(0., 0., 144., 144.),
 
-            blocks_origin: Vec2(8., 8.),
-            blocks_size: Vec2(2, 2),
-            block_uvs: Box::new([Vec2(0., 0.), Vec2(16., 0.), Vec2(0., 16.), Vec2(16., 16.)]),
-
             sprite_xys: Box::new([Vec2(32., 32.), Vec2(32., 64.)]),
             sprite_uvs: Box::new([Vec2(0., 16.), Vec2(32., 16.)]),
 

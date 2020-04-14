@@ -50,59 +50,37 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
 
     // process frames sent from update
     for (i, frame) in render_r.iter().enumerate() {
+        assert!(frame.sprite_xys.len() == frame.sprite_uvs.len());
+        assert!(frame.sprite_xys.len() < MAX_SPRITES);
+
+        // sprite
+        let sprite_count = frame.sprite_xys.len();
+
     	// camera
     	let view_transform = camera(frame.camera.0, frame.camera.1, frame.camera.2, frame.camera.3);
 
-    	// indices
-    	let mut xy_data_index: usize = 0;
-    	let mut uv_data_index: usize = 0;
-
-        let blocks_origin = frame.blocks_origin;
-        let Vec2(blocks_size_x, blocks_size_y) = frame.blocks_size;
-        for y in 0..blocks_size_y {
-            for x in 0..blocks_size_x {
-                let pos = Vec2(x as f32, y as f32) * Vec2(16., 16.);
-                xy_data[xy_data_index + 0] = (blocks_origin + pos + Vec2(0., 0.)).tuple();
-                xy_data[xy_data_index + 1] = (blocks_origin + pos + Vec2(16., 0.)).tuple();
-                xy_data[xy_data_index + 2] = (blocks_origin + pos + Vec2(16., 16.)).tuple();
-                xy_data[xy_data_index + 3] = (blocks_origin + pos + Vec2(0., 16.)).tuple();
-                xy_data_index += 4
-            }
-        }
-
-        // block uv
-        for &uv in frame.block_uvs.into_iter() {
-            uv_data[uv_data_index + 0] = (uv + Vec2(0., 0.)).tuple();
-            uv_data[uv_data_index + 1] = (uv + Vec2(16., 0.)).tuple();
-            uv_data[uv_data_index + 2] = (uv + Vec2(16., 16.)).tuple();
-            uv_data[uv_data_index + 3] = (uv + Vec2(0., 16.)).tuple();
-            uv_data_index += 4;
-        }
-
         // sprite xy
-        for &xy in frame.sprite_xys.into_iter() {
-        	xy_data[xy_data_index + 0] = (xy + Vec2(0., 0.)).tuple(); 
-        	xy_data[xy_data_index + 1] = (xy + Vec2(16., 0.)).tuple();
-        	xy_data[xy_data_index + 2] = (xy + Vec2(16., 16.)).tuple();
-        	xy_data[xy_data_index + 3] = (xy + Vec2(0., 16.)).tuple(); 
-        	xy_data_index += 4;
+        for (index, &xy) in frame.sprite_xys.into_iter().enumerate() {
+        	xy_data[index * 4 + 0] = (xy + Vec2(0., 0.)).tuple(); 
+        	xy_data[index * 4 + 1] = (xy + Vec2(16., 0.)).tuple();
+        	xy_data[index * 4 + 2] = (xy + Vec2(16., 16.)).tuple();
+        	xy_data[index * 4 + 3] = (xy + Vec2(0., 16.)).tuple(); 
         }
 
         // sprite uv
-        for &uv in frame.sprite_uvs.into_iter() {
-        	uv_data[uv_data_index + 0] = (uv + Vec2(0., 0.)).tuple(); 
-        	uv_data[uv_data_index + 1] = (uv + Vec2(16., 0.)).tuple();
-        	uv_data[uv_data_index + 2] = (uv + Vec2(16., 16.)).tuple();
-        	uv_data[uv_data_index + 3] = (uv + Vec2(0., 16.)).tuple();
-        	uv_data_index += 4;
+        for (index, &uv) in frame.sprite_uvs.into_iter().enumerate() {
+        	uv_data[index * 4 + 0] = (uv + Vec2(0., 0.)).tuple(); 
+        	uv_data[index * 4 + 1] = (uv + Vec2(16., 0.)).tuple();
+        	uv_data[index * 4 + 2] = (uv + Vec2(16., 16.)).tuple();
+        	uv_data[index * 4 + 3] = (uv + Vec2(0., 16.)).tuple();
         }
 
         // upload the buffer data
-        xy_buf.splice(0, &xy_data[0..xy_data_index * 4]).unwrap();
-        uv_buf.splice(0, &uv_data[0..uv_data_index * 4]).unwrap();
+        xy_buf.splice(0, &xy_data[0..sprite_count * 4]).unwrap();
+        uv_buf.splice(0, &uv_data[0..sprite_count * 4]).unwrap();
 
         // gl
-        ezgl::Draw::start_tri_draw(xy_data_index as u32 * 2, &programs["sprite"], &ibo)
+        ezgl::Draw::start_tri_draw(sprite_count as u32 * 2, &programs["sprite"], &ibo)
         	.with_buffer(&xy_buf, 0)
         	.with_buffer(&uv_buf, 1)
         	.with_uniform(ezgl::GLSLAny::Mat3(view_transform), 0)

@@ -13,7 +13,7 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
     let window = unsafe {
         let context = window.make_current().unwrap();
         ezgl::gl::load_with(|s| context.get_proc_address(s) as *const _);
-        ezgl::gl::ClearColor(0., 0., 0., 1.);
+        ezgl::gl::ClearColor(1., 1., 1., 1.);
         ezgl::bind_vao();
         context
     };
@@ -53,6 +53,10 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
         assert!(frame.sprite_xys.len() == frame.sprite_uvs.len());
         assert!(frame.sprite_xys.len() < MAX_SPRITES);
 
+        unsafe {
+            ezgl::gl::Clear(ezgl::gl::COLOR_BUFFER_BIT);
+        }
+
         // sprite
         let sprite_count = frame.sprite_xys.len();
 
@@ -89,7 +93,6 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
 
         unsafe {
             window.swap_buffers().unwrap();
-            ezgl::gl::Clear(ezgl::gl::COLOR_BUFFER_BIT);
         }
     }
 }

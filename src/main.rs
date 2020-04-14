@@ -44,29 +44,10 @@ fn main() {
     let (input_s, input_r) = crossbeam_channel::unbounded();
 
     // update thread
-    // std::thread::spawn(move || crate::update::update_thread(render_s, input_r));
+    std::thread::spawn(move || crate::update::update_thread(render_s, input_r));
 
     // render thread
     std::thread::spawn(move || crate::render::render_thread(window, render_r));
-
-    //////////////////////
-    // temporary frame to test rendering
-    use crate::common::*;
-    use crate::render::render_state::RenderState;
-    render_s
-        .send(RenderState {
-            kill: false,
-
-            camera: Vec4(0., 0., 144., 144.),
-
-            sprite_xys: Box::new([Vec2(32., 32.), Vec2(32., 64.)]),
-            sprite_uvs: Box::new([Vec2(0., 16.), Vec2(32., 16.)]),
-
-            time: 28,
-            remaining_tanks: 5,
-        })
-        .unwrap();
-    //////////////////////
 
     // input "thread" (forward events ot update)
     events_loop.run(move |event, _, out| {

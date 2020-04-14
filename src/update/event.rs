@@ -26,6 +26,10 @@ pub enum Key {
     X,
     Y,
     Z,
+    Up,
+    Down,
+    Left,
+    Right,
     Lmb,
     Rmb,
 }

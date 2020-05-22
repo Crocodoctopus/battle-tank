@@ -5,6 +5,13 @@ lazy_static! {
 }
 
 #[allow(dead_code)]
+pub fn get_seconds_as_u64() -> u64 {
+    let start = *PROGRAM_START;
+    let dur = Instant::now().duration_since(start);
+    dur.as_secs()
+}
+
+#[allow(dead_code)]
 pub fn get_milliseconds_as_u64() -> u64 {
     let start = *PROGRAM_START;
     let dur = Instant::now().duration_since(start);

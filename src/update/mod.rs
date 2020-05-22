@@ -5,6 +5,7 @@ use event::Event;
 use update::State;
 
 pub mod event;
+pub mod misc;
 mod update;
 
 pub fn update_thread(render_s: Sender<RenderState>, input_r: Receiver<Event>) {

@@ -1,4 +1,5 @@
 use super::event::Event;
+use super::misc::*;
 use crate::common::*;
 use crate::render::render_state::RenderState;
 
@@ -17,10 +18,25 @@ pub(super) struct State {
     leftkey_was_down: bool,
     rightkey_was_down: bool,
     zkey_was_down: bool,
+
+    // various game properties
+    camera: Vec4f,
+    rem_time: u64, // in microseconds
+    rem_tanks: u8,
+
+    // static blocks
+    arena_width: usize,
+    arena_height: usize,
+    static_block_types: Box<[Option<BlockType>]>,
 }
 
 impl State {
     pub(super) fn new() -> Self {
+        let arena_width = 2;
+        let arena_height = 2;
+        let static_block_types =
+            Box::new([None, Some(BlockType::Normal), Some(BlockType::Solid), None]);
+
         Self {
             exit: false,
             upkey_down: false,
@@ -33,6 +49,14 @@ impl State {
             leftkey_was_down: false,
             rightkey_was_down: false,
             zkey_was_down: false,
+
+            camera: Vec4(0f32, 0f32, 144f32, 144f32),
+            rem_time: 66,
+            rem_tanks: 8,
+
+            arena_width,
+            arena_height,
+            static_block_types,
         }
     }
 
@@ -69,17 +93,32 @@ impl State {
     pub(super) fn post_step(&mut self, _timestamp: u64) {}
 
     pub(super) fn render_prep(&self) -> RenderState {
+        //
+        let mut sprite_xys = Vec::with_capacity(self.arena_width * self.arena_height);
+        let mut sprite_uvs = Vec::with_capacity(self.arena_width * self.arena_height);
+
+        // static sprites (push the entire arena)
+        for y in 0..self.arena_height {
+            for x in 0..self.arena_width {
+                if let Some(tile_type) = self.static_block_types[x + y * self.arena_height] {
+                    let block_uv = block_to_uv(tile_type);
+                    sprite_xys.push(Vec2((x * 16) as f32, (y * 16) as f32));
+                    sprite_uvs.push(block_uv);
+                }
+            }
+        }
+
         // temporary frame to test rendering
         RenderState {
             exit: self.exit,
 
-            camera: Vec4(0., 0., 144., 144.),
+            camera: self.camera,
 
-            sprite_xys: Box::new([Vec2(32., 32.), Vec2(32., 64.)]),
-            sprite_uvs: Box::new([Vec2(0., 16.), Vec2(32., 16.)]),
+            sprite_xys: sprite_xys.into_boxed_slice(),
+            sprite_uvs: sprite_uvs.into_boxed_slice(),
 
-            time: 28,
-            remaining_tanks: 5,
+            time: self.rem_time as u8,
+            remaining_tanks: self.rem_tanks,
         }
     }
 }

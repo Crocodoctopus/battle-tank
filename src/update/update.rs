@@ -2,6 +2,7 @@ use super::event::Event;
 use super::misc::*;
 use crate::common::*;
 use crate::render::render_state::RenderState;
+use crate::array2d::*;
 
 pub(super) struct State {
     exit: bool,
@@ -25,17 +26,17 @@ pub(super) struct State {
     rem_tanks: u8,
 
     // static blocks
-    arena_width: usize,
-    arena_height: usize,
-    static_block_types: Box<[Option<BlockType>]>,
+    static_block_types: Array2D<Option<BlockType>>,
 }
 
 impl State {
     pub(super) fn new() -> Self {
-        let arena_width = 2;
-        let arena_height = 2;
-        let static_block_types =
-            Box::new([None, Some(BlockType::Normal), Some(BlockType::Solid), None]);
+        let static_block_types = Array2D::from_box(2, 2, Box::new([
+            None,
+            Some(BlockType::Normal),
+            Some(BlockType::Solid),
+            None,
+        ]));
 
         Self {
             exit: false,
@@ -54,8 +55,6 @@ impl State {
             rem_time: 66,
             rem_tanks: 8,
 
-            arena_width,
-            arena_height,
             static_block_types,
         }
     }
@@ -94,19 +93,17 @@ impl State {
 
     pub(super) fn render_prep(&self) -> RenderState {
         //
-        let mut sprite_xys = Vec::with_capacity(self.arena_width * self.arena_height);
-        let mut sprite_uvs = Vec::with_capacity(self.arena_width * self.arena_height);
+        let mut sprite_xys = Vec::with_capacity(self.static_block_types.get_width() * self.static_block_types.get_height());
+        let mut sprite_uvs = Vec::with_capacity(self.static_block_types.get_width() * self.static_block_types.get_height());
 
         // static sprites (push the entire arena)
-        for y in 0..self.arena_height {
-            for x in 0..self.arena_width {
-                if let Some(tile_type) = self.static_block_types[x + y * self.arena_height] {
-                    let block_uv = block_to_uv(tile_type);
-                    sprite_xys.push(Vec2((x * 16) as f32, (y * 16) as f32));
-                    sprite_uvs.push(block_uv);
-                }
-            }
-        }
+        self.static_block_types.for_each(|x, y, block_opt| {
+            if let Some(block) = block_opt {
+                let block_uv = block_to_uv(*block);
+                sprite_xys.push(Vec2((x * 16) as f32, (y * 16) as f32));
+                sprite_uvs.push(block_uv);
+            };
+        });
 
         // temporary frame to test rendering
         RenderState {

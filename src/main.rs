@@ -7,6 +7,7 @@ extern crate nalgebra;
 
 #[macro_use]
 mod render;
+mod array2d;
 mod common;
 mod io;
 mod time;

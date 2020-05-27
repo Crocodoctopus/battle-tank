@@ -18,7 +18,7 @@ use glutin::window::WindowBuilder;
 
 fn main() {
     // widow parameters
-    let window_w = 144f64 * 5.;
+    let window_w = 160f64 * 5.;
     let window_h = 144f64 * 5.;
 
     // window creation

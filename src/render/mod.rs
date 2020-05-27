@@ -25,7 +25,7 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
     // some constants
     const MAX_TANKS: usize = 5;
     const MAX_EXPLOSIONS: usize = MAX_TANKS;
-    const MAX_BLOCKS: usize = 100;
+    const MAX_BLOCKS: usize = (160/16 + 1) * (144/16 + 1);
     const MAX_SPRITES: usize = MAX_TANKS + MAX_EXPLOSIONS + MAX_BLOCKS;
 
     // all the sprite data gets dumped into these things
@@ -52,46 +52,46 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
             break;
         }
 
-        assert!(frame.sprite_xys.len() == frame.sprite_uvs.len());
-        assert!(frame.sprite_xys.len() < MAX_SPRITES);
-
         unsafe {
             ezgl::gl::Clear(ezgl::gl::COLOR_BUFFER_BIT);
         }
 
-        // sprite
-        let sprite_count = frame.sprite_xys.len();
-
         // camera
         let view_transform = camera(
-            frame.camera.0,
-            frame.camera.1,
-            frame.camera.2,
-            frame.camera.3,
+            (frame.camera.0/0.25).floor() * 0.25,
+            (frame.camera.1/0.25).floor() * 0.25,
+            (frame.camera.2/0.25).floor() * 0.25,
+            (frame.camera.3/0.25).floor() * 0.25,
         );
 
-        // sprite xy
-        for (index, &xy) in frame.sprite_xys.into_iter().enumerate() {
-            xy_data[index * 4 + 0] = (xy + Vec2(0., 0.)).tuple();
-            xy_data[index * 4 + 1] = (xy + Vec2(16., 0.)).tuple();
-            xy_data[index * 4 + 2] = (xy + Vec2(16., 16.)).tuple();
-            xy_data[index * 4 + 3] = (xy + Vec2(0., 16.)).tuple();
-        }
+        //
+        let mut sprite_counter = 0usize;
 
-        // sprite uv
-        for (index, &uv) in frame.sprite_uvs.into_iter().enumerate() {
-            uv_data[index * 4 + 0] = (uv + Vec2(0., 0.)).tuple();
-            uv_data[index * 4 + 1] = (uv + Vec2(16., 0.)).tuple();
-            uv_data[index * 4 + 2] = (uv + Vec2(16., 16.)).tuple();
-            uv_data[index * 4 + 3] = (uv + Vec2(0., 16.)).tuple();
-        }
+        // static blocks
+        let Vec2(x_offset, y_offset) = frame.static_blocks_offset;
+        frame.static_block_types.for_each(|x, y, block_type_opt| {
+            if let Some(block_type) = block_type_opt {
+                let x = (x * 16) as f32;
+                let y = (y * 16) as f32;
+                xy_data[sprite_counter * 4 + 0] = (x + x_offset + 0., y + y_offset + 0.);
+                xy_data[sprite_counter * 4 + 1] = (x + x_offset + 16., y + y_offset + 0.);
+                xy_data[sprite_counter * 4 + 2] = (x + x_offset + 16., y + y_offset + 16.);
+                xy_data[sprite_counter * 4 + 3] = (x + x_offset + 0., y + y_offset + 16.);
+                let Vec2(u_offset, v_offset) = crate::update::misc::block_to_uv(*block_type);
+                uv_data[sprite_counter * 4 + 0] = (u_offset + 0. + 0.05, v_offset + 0. + 0.05);
+                uv_data[sprite_counter * 4 + 1] = (u_offset + 16. - 0.05, v_offset + 0. + 0.05);
+                uv_data[sprite_counter * 4 + 2] = (u_offset + 16. - 0.05, v_offset + 16. - 0.05);
+                uv_data[sprite_counter * 4 + 3] = (u_offset + 0. + 0.05, v_offset + 16. - 0.05);
+                sprite_counter += 1;
+            }
+        });
 
         // upload the buffer data
-        xy_buf.splice(0, &xy_data[0..sprite_count * 4]).unwrap();
-        uv_buf.splice(0, &uv_data[0..sprite_count * 4]).unwrap();
+        xy_buf.splice(0, &xy_data[0..sprite_counter * 4]).unwrap();
+        uv_buf.splice(0, &uv_data[0..sprite_counter * 4]).unwrap();
 
         // gl
-        ezgl::Draw::start_tri_draw(sprite_count as u32 * 2, &programs["sprite"], &ibo)
+        ezgl::Draw::start_tri_draw(sprite_counter as u32 * 2, &programs["sprite"], &ibo)
             .with_buffer(&xy_buf, 0)
             .with_buffer(&uv_buf, 1)
             .with_uniform(ezgl::GLSLAny::Mat3(view_transform), 0)

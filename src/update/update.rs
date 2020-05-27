@@ -1,8 +1,8 @@
 use super::event::Event;
 use super::misc::*;
+use crate::array2d::*;
 use crate::common::*;
 use crate::render::render_state::RenderState;
-use crate::array2d::*;
 
 pub(super) struct State {
     exit: bool,
@@ -31,12 +31,31 @@ pub(super) struct State {
 
 impl State {
     pub(super) fn new() -> Self {
-        let static_block_types = Array2D::from_box(2, 2, Box::new([
-            None,
-            Some(BlockType::Normal),
-            Some(BlockType::Solid),
-            None,
-        ]));
+        let static_block_types = Array2D::from_box(
+            4,
+            4,
+            Box::new([
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+
+                Some(BlockType::Solid),
+                None, 
+                Some(BlockType::Normal), 
+                Some(BlockType::Solid),
+
+                Some(BlockType::Solid), 
+                None,
+                None,
+                Some(BlockType::Solid), 
+
+                Some(BlockType::Solid), 
+                Some(BlockType::Solid), 
+                Some(BlockType::Solid), 
+                Some(BlockType::Solid), 
+            ]),
+        );
 
         Self {
             exit: false,
@@ -51,7 +70,7 @@ impl State {
             rightkey_was_down: false,
             zkey_was_down: false,
 
-            camera: Vec4(0f32, 0f32, 144f32, 144f32),
+            camera: Vec4(0f32, 0f32, 160f32, 144f32),
             rem_time: 66,
             rem_tanks: 8,
 
@@ -87,35 +106,51 @@ impl State {
         }
     }
 
-    pub(super) fn step(&mut self, _timestamp: u64, _simtime: u64) {}
+    pub(super) fn step(&mut self, _timestamp: u64, simtime: u64) {
+        let dt = simtime as f32 / 1000000f32; 
+
+        // temp camera movement
+        if self.leftkey_down {
+            self.camera.0 -= 16f32 * dt;
+        }
+        if self.rightkey_down {
+            self.camera.0 += 16f32 * dt;
+        }
+        if self.upkey_down {
+            self.camera.1 -= 16f32 * dt;
+        }
+        if self.downkey_down {
+            self.camera.1 += 16f32 * dt;
+        }
+
+        // clamp
+        if self.camera.0 < 0f32 {
+            self.camera.0 = 0f32;
+        }
+        if self.camera.1 < 0f32 {
+            self.camera.1 = 0f32;
+        }
+    }
 
     pub(super) fn post_step(&mut self, _timestamp: u64) {}
 
     pub(super) fn render_prep(&self) -> RenderState {
-        //
-        let mut sprite_xys = Vec::with_capacity(self.static_block_types.get_width() * self.static_block_types.get_height());
-        let mut sprite_uvs = Vec::with_capacity(self.static_block_types.get_width() * self.static_block_types.get_height());
-
-        // static sprites (push the entire arena)
-        self.static_block_types.for_each(|x, y, block_opt| {
-            if let Some(block) = block_opt {
-                let block_uv = block_to_uv(*block);
-                sprite_xys.push(Vec2((x * 16) as f32, (y * 16) as f32));
-                sprite_uvs.push(block_uv);
-            };
-        });
+        // clone region
+        let x1 = (self.camera.0/16f32).floor() as usize;
+        let y1 = (self.camera.1/16f32).floor() as usize;
+        let x2 = ((self.camera.0 + self.camera.2)/16f32).ceil() as usize;
+        let y2 = ((self.camera.1 + self.camera.3)/16f32).ceil() as usize;
+        let static_block_types = self.static_block_types.clone_sub(x1..x2, y1..y2);
 
         // temporary frame to test rendering
         RenderState {
             exit: self.exit,
-
-            camera: self.camera,
-
-            sprite_xys: sprite_xys.into_boxed_slice(),
-            sprite_uvs: sprite_uvs.into_boxed_slice(),
-
             time: self.rem_time as u8,
             remaining_tanks: self.rem_tanks,
+            camera: self.camera,
+
+            static_blocks_offset: Vec2((x1 * 16) as f32, (y1 * 16) as f32),
+            static_block_types,
         }
     }
 }

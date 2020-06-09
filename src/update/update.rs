@@ -95,7 +95,11 @@ impl State {
         self.exit
     }
 
-    pub(super) fn pre_step(&mut self, _timestamp: u64, events: impl Iterator<Item = Event>) {
+    pub(super) fn pre_step(
+        &mut self,
+        _us_frame_timestamp: u64,
+        events: impl Iterator<Item = Event>,
+    ) {
         self.upkey_was_down = self.upkey_down;
         self.downkey_was_down = self.downkey_down;
         self.rightkey_was_down = self.rightkey_down;
@@ -119,8 +123,10 @@ impl State {
         }
     }
 
-    pub(super) fn step(&mut self, _timestamp: u64, simtime: u64) {
+    pub(super) fn step(&mut self, us_frame_timestamp: u64, simtime: u64) {
         let dt = simtime as f32 / 1000000f32;
+
+        let ms_frame_timestamp = us_frame_timestamp / 1000;
 
         // temp camera movement
         if self.leftkey_down {
@@ -142,6 +148,20 @@ impl State {
         }
         if self.camera.1 < 0f32 {
             self.camera.1 = 0f32;
+        }
+
+        // tanks
+        let tanks = self.tank_ids.len();
+
+        // process tank delay
+        for index in 0..tanks {
+            if let TankState::Delayed(us_counter) = self.tank_states[index] {
+                let new_us_counter = us_counter.saturating_sub(simtime as u32);
+                self.tank_states[index] = match new_us_counter == 0 {
+                    true => TankState::Idle,
+                    false => TankState::Delayed(new_us_counter),
+                };
+            }
         }
     }
 

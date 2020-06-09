@@ -40,5 +40,5 @@ pub fn block_to_uv(block_type: BlockType) -> Vec2f {
 pub enum TankState {
     Idle,
     Moving,
-    Delayed(u16), // milliseconds
+    Delayed(u32), // microsecond counter
 }

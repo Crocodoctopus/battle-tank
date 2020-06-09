@@ -27,6 +27,12 @@ pub(super) struct State {
 
     // static blocks
     static_block_types: Array2D<Option<BlockType>>,
+
+    // tanks
+    tank_ids: Vec<u32>,
+    tank_positions: Vec<Vec2f>,
+    tank_directions: Vec<Direction>,
+    tank_states: Vec<TankState>,
 }
 
 impl State {
@@ -39,23 +45,25 @@ impl State {
                 Some(BlockType::Solid),
                 Some(BlockType::Solid),
                 Some(BlockType::Solid),
-
                 Some(BlockType::Solid),
-                None, 
-                Some(BlockType::Normal), 
-                Some(BlockType::Solid),
-
-                Some(BlockType::Solid), 
                 None,
                 None,
-                Some(BlockType::Solid), 
-
-                Some(BlockType::Solid), 
-                Some(BlockType::Solid), 
-                Some(BlockType::Solid), 
-                Some(BlockType::Solid), 
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+                None,
+                None,
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
+                Some(BlockType::Solid),
             ]),
         );
+
+        let tank_ids = vec![0];
+        let tank_positions = vec![Vec2(16f32, 16f32)];
+        let tank_directions = vec![Direction::Up];
+        let tank_states = vec![TankState::Idle];
 
         Self {
             exit: false,
@@ -75,6 +83,11 @@ impl State {
             rem_tanks: 8,
 
             static_block_types,
+
+            tank_ids,
+            tank_positions,
+            tank_directions,
+            tank_states,
         }
     }
 
@@ -107,7 +120,7 @@ impl State {
     }
 
     pub(super) fn step(&mut self, _timestamp: u64, simtime: u64) {
-        let dt = simtime as f32 / 1000000f32; 
+        let dt = simtime as f32 / 1000000f32;
 
         // temp camera movement
         if self.leftkey_down {
@@ -136,10 +149,10 @@ impl State {
 
     pub(super) fn render_prep(&self) -> RenderState {
         // clone region
-        let x1 = (self.camera.0/16f32).floor() as usize;
-        let y1 = (self.camera.1/16f32).floor() as usize;
-        let x2 = ((self.camera.0 + self.camera.2)/16f32).ceil() as usize;
-        let y2 = ((self.camera.1 + self.camera.3)/16f32).ceil() as usize;
+        let x1 = (self.camera.0 / 16f32).floor() as usize;
+        let y1 = (self.camera.1 / 16f32).floor() as usize;
+        let x2 = ((self.camera.0 + self.camera.2) / 16f32).ceil() as usize;
+        let y2 = ((self.camera.1 + self.camera.3) / 16f32).ceil() as usize;
         let static_block_types = self.static_block_types.clone_sub(x1..x2, y1..y2);
 
         // temporary frame to test rendering
@@ -151,6 +164,10 @@ impl State {
 
             static_blocks_offset: Vec2((x1 * 16) as f32, (y1 * 16) as f32),
             static_block_types,
+
+            tank_positions: self.tank_positions.clone().into_boxed_slice(),
+            tank_directions: self.tank_directions.clone().into_boxed_slice(),
+            tank_states: self.tank_states.clone().into_boxed_slice(),
         }
     }
 }

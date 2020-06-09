@@ -12,4 +12,9 @@ pub struct RenderState {
     // static blocks
     pub static_blocks_offset: Vec2f,
     pub static_block_types: Array2D<Option<BlockType>>,
+
+    // tanks
+    pub tank_positions: Box<[Vec2f]>,
+    pub tank_directions: Box<[Direction]>,
+    pub tank_states: Box<[TankState]>,
 }

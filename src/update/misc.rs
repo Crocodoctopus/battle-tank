@@ -11,10 +11,10 @@ pub enum Direction {
 
 pub fn direction_to_vec2f(direction: Direction) -> Vec2f {
     match direction {
-        Up => Vec2(0.0, -1.0),
-        Down => Vec2(0.0, 1.0),
-        Left => Vec2(-1.0, 0.0),
-        Right => Vec2(1.0, 0.0),
+        Direction::Up => Vec2(0.0, -1.0),
+        Direction::Down => Vec2(0.0, 1.0),
+        Direction::Left => Vec2(-1.0, 0.0),
+        Direction::Right => Vec2(1.0, 0.0),
     }
 }
 
@@ -34,4 +34,11 @@ pub fn block_to_uv(block_type: BlockType) -> Vec2f {
             _ => unimplemented!(),
         },
     }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum TankState {
+    Idle,
+    Moving,
+    Delayed(u16), // milliseconds
 }

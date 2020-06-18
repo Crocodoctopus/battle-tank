@@ -47,7 +47,7 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
     );
 
     // process frames sent from update
-    for (i, frame) in render_r.iter().enumerate() {
+    for (_i, frame) in render_r.iter().enumerate() {
         if frame.exit {
             break;
         }
@@ -127,9 +127,7 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
             .draw();
 
         // swap
-        unsafe {
-            window.swap_buffers().unwrap();
-        }
+        window.swap_buffers().unwrap();
     }
 }
 

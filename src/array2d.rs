@@ -1,4 +1,4 @@
-use std::ops::{Index, Range};
+use std::ops::Range;
 
 fn clamp_usize_range(range: Range<usize>, clamp: usize) -> Range<usize> {
     match range.end > clamp {

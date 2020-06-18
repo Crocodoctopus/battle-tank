@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 #[macro_use]
 extern crate lazy_static;
 extern crate crossbeam_channel;
@@ -63,7 +65,10 @@ fn main() {
 
         // map and forward the event to the update thread
         if let Some(e) = map_event(event) {
-            input_s.send(e);
+            #[allow(unused_must_use)]
+            {
+                input_s.send(e);
+            }
         }
     });
 }

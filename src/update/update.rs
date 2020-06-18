@@ -155,12 +155,68 @@ impl State {
 
         // process tank delay
         for index in 0..tanks {
-            if let TankState::Delayed(us_counter) = self.tank_states[index] {
-                let new_us_counter = us_counter.saturating_sub(simtime as u32);
-                self.tank_states[index] = match new_us_counter == 0 {
-                    true => TankState::Idle,
-                    false => TankState::Delayed(new_us_counter),
+            if let TankState::Delayed {
+                timestamp,
+                duration,
+            } = self.tank_states[index]
+            {
+                let diff = (ms_frame_timestamp as u16).wrapping_sub(timestamp);
+                if diff > duration {
+                    self.tank_states[index] = TankState::Idle;
+                }
+            }
+        }
+
+        // process tank AI
+        for index in 0..tanks {
+            if let TankState::Idle = self.tank_states[index] {
+                if self.zkey_down {
+                    // push
+                    continue;
+                }
+
+                // move
+                let mdir = if self.rightkey_down {
+                    Some(Direction::Right)
+                } else if self.leftkey_down {
+                    Some(Direction::Left)
+                } else if self.upkey_down {
+                    Some(Direction::Up)
+                } else if self.downkey_down {
+                    Some(Direction::Down)
+                } else {
+                    None
                 };
+
+                if let Some(dir) = mdir {
+                    self.tank_states[index] = TankState::Moving {
+                        timestamp: ms_frame_timestamp as u16,
+                        duration: 1000,
+                        start: self.tank_positions[index],
+                    };
+                    self.tank_directions[index] = dir;
+                }
+            }
+        }
+
+        // process tank movement
+        for index in 0..tanks {
+            if let TankState::Moving {
+                timestamp,
+                duration,
+                start,
+            } = self.tank_states[index]
+            {
+                // calculate the position of the tank
+                let diff = (ms_frame_timestamp as u16).wrapping_sub(timestamp);
+                let ratio = clamp(0.0, diff as f32 / duration as f32, 1.0);
+                let direction_vec = self.tank_directions[index].vec2f();
+                self.tank_positions[index] = start + direction_vec * ratio * 8.0;
+
+                // transition the tank into idle maybe
+                if diff > duration {
+                    self.tank_states[index] = TankState::Idle;
+                }
             }
         }
     }

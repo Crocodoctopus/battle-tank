@@ -1,3 +1,32 @@
+#[derive(Copy, Clone, Debug)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    pub fn vec2f(self) -> Vec2f {
+        match self {
+            Direction::Up => Vec2(0.0, -1.0),
+            Direction::Down => Vec2(0.0, 1.0),
+            Direction::Left => Vec2(-1.0, 0.0),
+            Direction::Right => Vec2(1.0, 0.0),
+        }
+    }
+}
+
+pub fn clamp<T: PartialOrd>(low: T, t: T, high: T) -> T {
+    if t < low {
+        low
+    } else if t > high {
+        high
+    } else {
+        t
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Vec2<T>(pub T, pub T);
 #[derive(Debug, Copy, Clone)]
@@ -22,31 +51,40 @@ impl<T> Vec2<T> {
         (self.0, self.1)
     }
 }
-impl<T> std::ops::Add for Vec2<T>
+impl<T> std::ops::Add<Self> for Vec2<T>
 where
-    T: std::ops::Add<Output = T>,
+    T: std::ops::Add<T, Output = T>,
 {
     type Output = Self;
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self::Output {
         Self(self.0 + other.0, self.1 + other.1)
     }
 }
-impl<T> std::ops::Sub for Vec2<T>
+impl<T> std::ops::Sub<Self> for Vec2<T>
 where
-    T: std::ops::Sub<Output = T>,
+    T: std::ops::Sub<T, Output = T>,
 {
     type Output = Self;
-    fn sub(self, other: Self) -> Self {
+    fn sub(self, other: Self) -> Self::Output {
         Self(self.0 - other.0, self.1 - other.1)
     }
 }
-impl<T> std::ops::Mul for Vec2<T>
+impl<T> std::ops::Mul<Self> for Vec2<T>
 where
-    T: std::ops::Mul<Output = T>,
+    T: std::ops::Mul<T, Output = T>,
 {
     type Output = Self;
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self::Output {
         Self(self.0 * other.0, self.1 * other.1)
+    }
+}
+impl<T> std::ops::Mul<f32> for Vec2<T>
+where
+    T: std::ops::Mul<f32, Output = T>,
+{
+    type Output = Self;
+    fn mul(self, other: f32) -> Self::Output {
+        Self(self.0 * other, self.1 * other)
     }
 }
 
@@ -55,30 +93,30 @@ impl<T> Vec3<T> {
         (self.0, self.1, self.2)
     }
 }
-impl<T> std::ops::Add for Vec3<T>
+impl<T> std::ops::Add<Self> for Vec3<T>
 where
-    T: std::ops::Add<Output = T>,
+    T: std::ops::Add<T, Output = T>,
 {
     type Output = Self;
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self::Output {
         Self(self.0 + other.0, self.1 + other.1, self.2 + other.2)
     }
 }
-impl<T> std::ops::Sub for Vec3<T>
+impl<T> std::ops::Sub<Self> for Vec3<T>
 where
-    T: std::ops::Sub<Output = T>,
+    T: std::ops::Sub<T, Output = T>,
 {
     type Output = Self;
-    fn sub(self, other: Self) -> Self {
+    fn sub(self, other: Self) -> Self::Output {
         Self(self.0 - other.0, self.1 - other.1, self.2 - other.2)
     }
 }
-impl<T> std::ops::Mul for Vec3<T>
+impl<T> std::ops::Mul<Self> for Vec3<T>
 where
-    T: std::ops::Mul<Output = T>,
+    T: std::ops::Mul<T, Output = T>,
 {
     type Output = Self;
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self::Output {
         Self(self.0 * other.0, self.1 * other.1, self.2 * other.2)
     }
 }
@@ -88,12 +126,12 @@ impl<T> Vec4<T> {
         (self.0, self.1, self.2, self.3)
     }
 }
-impl<T> std::ops::Add for Vec4<T>
+impl<T> std::ops::Add<Self> for Vec4<T>
 where
-    T: std::ops::Add<Output = T>,
+    T: std::ops::Add<T, Output = T>,
 {
     type Output = Self;
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self::Output {
         Self(
             self.0 + other.0,
             self.1 + other.1,
@@ -102,12 +140,12 @@ where
         )
     }
 }
-impl<T> std::ops::Sub for Vec4<T>
+impl<T> std::ops::Sub<Self> for Vec4<T>
 where
-    T: std::ops::Sub<Output = T>,
+    T: std::ops::Sub<T, Output = T>,
 {
     type Output = Self;
-    fn sub(self, other: Self) -> Self {
+    fn sub(self, other: Self) -> Self::Output {
         Self(
             self.0 - other.0,
             self.1 - other.1,
@@ -116,12 +154,12 @@ where
         )
     }
 }
-impl<T> std::ops::Mul for Vec4<T>
+impl<T> std::ops::Mul<Self> for Vec4<T>
 where
-    T: std::ops::Mul<Output = T>,
+    T: std::ops::Mul<T, Output = T>,
 {
     type Output = Self;
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self::Output {
         Self(
             self.0 * other.0,
             self.1 * other.1,

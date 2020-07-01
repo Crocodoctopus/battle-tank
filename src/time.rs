@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 lazy_static! {
-    static ref PROGRAM_START: Instant = { Instant::now() };
+    static ref PROGRAM_START: Instant = Instant::now();
 }
 
 #[allow(dead_code)]

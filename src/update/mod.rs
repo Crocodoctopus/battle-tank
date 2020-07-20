@@ -6,6 +6,7 @@ use event::Event;
 use update::State;
 
 pub mod event;
+mod func;
 pub mod misc;
 mod update;
 

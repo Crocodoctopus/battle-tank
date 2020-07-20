@@ -1,4 +1,5 @@
 use super::event::Event;
+use super::func::*;
 use super::misc::*;
 use crate::array2d::*;
 use crate::common::*;
@@ -126,8 +127,6 @@ impl State {
     pub(super) fn step(&mut self, us_frame_timestamp: u64, simtime: u64) {
         let dt = simtime as f32 / 1000000f32;
 
-        let ms_frame_timestamp = us_frame_timestamp / 1000;
-
         // temp camera movement
         if self.leftkey_down {
             self.camera.0 -= 16f32 * dt;
@@ -154,71 +153,40 @@ impl State {
         let tanks = self.tank_ids.len();
 
         // process tank delay
-        for index in 0..tanks {
-            if let TankState::Delayed {
-                timestamp,
-                duration,
-            } = self.tank_states[index]
-            {
-                let diff = (ms_frame_timestamp as u16).wrapping_sub(timestamp);
-                if diff > duration {
-                    self.tank_states[index] = TankState::Idle;
-                }
-            }
-        }
+        tank_delay(tanks, us_frame_timestamp, &mut self.tank_states[..]);
 
         // process tank AI
-        for index in 0..tanks {
-            if let TankState::Idle = self.tank_states[index] {
-                if self.zkey_down {
-                    // push
-                    continue;
-                }
+        let _push = tank_ai(
+            tanks,
+            us_frame_timestamp,
+            &self.tank_positions[..],
+            &mut self.tank_directions[..],
+            &mut self.tank_states[..],
+            self.zkey_down,
+            self.upkey_down,
+            self.downkey_down,
+            self.leftkey_down,
+            self.rightkey_down,
+        );
 
-                // move
-                let mdir = if self.rightkey_down {
-                    Some(Direction::Right)
-                } else if self.leftkey_down {
-                    Some(Direction::Left)
-                } else if self.upkey_down {
-                    Some(Direction::Up)
-                } else if self.downkey_down {
-                    Some(Direction::Down)
-                } else {
-                    None
-                };
-
-                if let Some(dir) = mdir {
-                    self.tank_states[index] = TankState::Moving {
-                        timestamp: ms_frame_timestamp as u16,
-                        duration: 1000,
-                        start: self.tank_positions[index],
-                    };
-                    self.tank_directions[index] = dir;
-                }
-            }
-        }
+        // process push
+        /*
+        tank_push(
+            tanks,
+            push,
+            &mut self.static_block_types,
+            &mut self.tank_states[..],
+        );
+        */
 
         // process tank movement
-        for index in 0..tanks {
-            if let TankState::Moving {
-                timestamp,
-                duration,
-                start,
-            } = self.tank_states[index]
-            {
-                // calculate the position of the tank
-                let diff = (ms_frame_timestamp as u16).wrapping_sub(timestamp);
-                let ratio = clamp(0.0, diff as f32 / duration as f32, 1.0);
-                let direction_vec = self.tank_directions[index].vec2f();
-                self.tank_positions[index] = start + direction_vec * ratio * 8.0;
-
-                // transition the tank into idle maybe
-                if diff > duration {
-                    self.tank_states[index] = TankState::Idle;
-                }
-            }
-        }
+        tank_movement(
+            tanks,
+            us_frame_timestamp,
+            &mut self.tank_positions[..],
+            &self.tank_directions[..],
+            &mut self.tank_states[..],
+        );
     }
 
     pub(super) fn post_step(&mut self, _timestamp: u64) {}

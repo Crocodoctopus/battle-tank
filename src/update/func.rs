@@ -73,7 +73,7 @@ pub fn tank_ai(
         if let Some(dir) = mdir {
             tank_states[index] = TankState::Moving {
                 timestamp: ms_timestamp,
-                duration: 1000,
+                duration: 400,
                 start: tank_positions[index],
             };
             tank_directions[index] = dir;

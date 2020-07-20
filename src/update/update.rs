@@ -128,18 +128,9 @@ impl State {
         let dt = simtime as f32 / 1000000f32;
 
         // temp camera movement
-        if self.leftkey_down {
-            self.camera.0 -= 16f32 * dt;
-        }
-        if self.rightkey_down {
-            self.camera.0 += 16f32 * dt;
-        }
-        if self.upkey_down {
-            self.camera.1 -= 16f32 * dt;
-        }
-        if self.downkey_down {
-            self.camera.1 += 16f32 * dt;
-        }
+        let Vec2(x, y) = *self.tank_positions.get(0).unwrap_or(&Vec2(0., 0.));
+        self.camera.0 = x - self.camera.2 / 2.;
+        self.camera.1 = y - self.camera.3 / 2.;
 
         // clamp
         if self.camera.0 < 0f32 {

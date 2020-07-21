@@ -83,6 +83,52 @@ pub fn tank_ai(
     v.into_iter()
 }
 
+pub fn tank_push(
+    tanks: usize,
+    us_timestamp: u64,
+    push: impl Iterator<Item = usize>,
+    static_block_types: &mut (impl IndexMut<(usize, usize), Output = Option<BlockType>> + ?Sized),
+    tank_positions: &(impl Index<usize, Output = Vec2f> + ?Sized),
+    tank_directions: &(impl Index<usize, Output = Direction> + ?Sized),
+    tank_states: &mut (impl IndexMut<usize, Output = TankState> + ?Sized),
+) {
+    let ms_timestamp = (us_timestamp / 1000) as u16;
+
+    for index in push {
+        // position/direction
+        let position = tank_positions[index];
+        let direction = tank_directions[index];
+
+        // integer position/direction
+        let dir = direction.vec2f();
+        let (block_x, block_y) = (
+            (position.0 / 16. + dir.0) as usize,
+            (position.1 / 16. + dir.1) as usize,
+        );
+
+        match static_block_types[(block_x, block_y)] {
+            // normal blocks can always be pushed
+            Some(BlockType::Normal) => {
+                static_block_types[(block_x, block_y)] = None;
+                // push sliding BlockType::Normal
+            }
+            // push if direction ==, otherwise destroy
+            Some(BlockType::OneWay(block_direction)) => {
+                static_block_types[(block_x, block_y)] = None;
+                //if direction == block_direction {
+                // push sliding BlockType::OneWay
+                //}
+            }
+            _ => continue,
+        };
+
+        tank_states[index] = TankState::Delayed {
+            timestamp: ms_timestamp,
+            duration: 1000,
+        };
+    }
+}
+
 pub fn tank_movement(
     tanks: usize,
     us_timestamp: u64,

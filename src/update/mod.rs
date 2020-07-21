@@ -64,14 +64,14 @@ pub fn update_thread(render_s: Sender<RenderState>, input_r: Receiver<Event>) {
                 t4_acc as f32 / 1_000f32 / 120f32,
             );
 
-            println!(
+            /*println!(
                 "Frametime: {:?}ms\n  prestep: {:?}ms\n  step: {:?}ms\n  poststep: {:?}ms\n  render step: {:?}ms",
                 t1_acc + t2_acc + t3_acc + t4_acc,
                 t1_acc,
                 t2_acc,
                 t3_acc,
                 t4_acc
-            );
+            );*/
             frametimes.clear();
         }
 

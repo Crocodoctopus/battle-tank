@@ -10,8 +10,8 @@ pub enum BlockType {
 // this needs to change
 pub fn block_to_uv(block_type: BlockType) -> Vec2f {
     match block_type {
-        BlockType::Normal => Vec2(16., 0.),
-        BlockType::Solid => Vec2(32., 0.),
+        BlockType::Normal => Vec2(32., 0.),
+        BlockType::Solid => Vec2(16., 0.),
         BlockType::OneWay(direction) => match direction {
             _ => unimplemented!(),
         },

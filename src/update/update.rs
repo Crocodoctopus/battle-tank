@@ -48,7 +48,7 @@ impl State {
                 Some(BlockType::Solid),
                 Some(BlockType::Solid),
                 None,
-                None,
+                Some(BlockType::Normal),
                 Some(BlockType::Solid),
                 Some(BlockType::Solid),
                 None,
@@ -111,10 +111,12 @@ impl State {
         for event in events {
             match event {
                 Event::Exit => dbg!(self.exit = true),
+                Event::KeyDown(Key::Z) => dbg!(self.zkey_down = true),
                 Event::KeyDown(Key::Up) => dbg!(self.upkey_down = true),
                 Event::KeyDown(Key::Down) => dbg!(self.downkey_down = true),
                 Event::KeyDown(Key::Left) => dbg!(self.leftkey_down = true),
                 Event::KeyDown(Key::Right) => dbg!(self.rightkey_down = true),
+                Event::KeyUp(Key::Z) => dbg!(self.zkey_down = false),
                 Event::KeyUp(Key::Up) => dbg!(self.upkey_down = false),
                 Event::KeyUp(Key::Down) => dbg!(self.downkey_down = false),
                 Event::KeyUp(Key::Left) => dbg!(self.leftkey_down = false),
@@ -147,13 +149,13 @@ impl State {
         tank_delay(tanks, us_frame_timestamp, &mut self.tank_states[..]);
 
         // process tank AI
-        let _push = tank_ai(
+        let push = tank_ai(
             tanks,
             us_frame_timestamp,
             &self.tank_positions[..],
             &mut self.tank_directions[..],
             &mut self.tank_states[..],
-            self.zkey_down,
+            self.zkey_down & !self.zkey_was_down,
             self.upkey_down,
             self.downkey_down,
             self.leftkey_down,
@@ -161,14 +163,15 @@ impl State {
         );
 
         // process push
-        /*
         tank_push(
             tanks,
+            us_frame_timestamp,
             push,
             &mut self.static_block_types,
+            &self.tank_positions,
+            &self.tank_directions,
             &mut self.tank_states[..],
         );
-        */
 
         // process tank movement
         tank_movement(

@@ -84,9 +84,8 @@ pub fn tank_ai(
 }
 
 pub fn tank_push(
-    tanks: usize,
-    us_timestamp: u64,
     push: impl Iterator<Item = usize>,
+    us_timestamp: u64,
     static_block_types: &mut (impl IndexMut<(usize, usize), Output = Option<BlockType>> + ?Sized),
     tank_positions: &(impl Index<usize, Output = Vec2f> + ?Sized),
     tank_directions: &(impl Index<usize, Output = Direction> + ?Sized),
@@ -113,7 +112,7 @@ pub fn tank_push(
                 // push sliding BlockType::Normal
             }
             // push if direction ==, otherwise destroy
-            Some(BlockType::OneWay(block_direction)) => {
+            Some(BlockType::OneWay(_block_direction)) => {
                 static_block_types[(block_x, block_y)] = None;
                 //if direction == block_direction {
                 // push sliding BlockType::OneWay
@@ -159,5 +158,18 @@ pub fn tank_movement(
         if diff > duration {
             tank_states[index] = TankState::Idle;
         }
+    }
+}
+
+pub fn sliding_block_movement(
+    sliding_blocks: usize,
+    dt: f32,
+    sliding_block_positions: &mut (impl IndexMut<usize, Output = Vec2f> + ?Sized),
+    sliding_block_directions: &(impl Index<usize, Output = Direction> + ?Sized),
+) {
+    for index in 0..sliding_blocks {
+        let Vec2(dx, dy) = sliding_block_directions[index].vec2f();
+        let Vec2(x, y) = sliding_block_positions[index];
+        sliding_block_positions[index] = Vec2(x + 60. * dt * dx, y + 60. * dt * dy);
     }
 }

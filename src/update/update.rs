@@ -158,15 +158,16 @@ impl State {
             self.camera.1 = 0f32;
         }
 
-        // tanks
-        let tanks = self.tank_ids.len();
-
         // process tank delay
-        tank_delay(tanks, us_frame_timestamp, &mut self.tank_states[..]);
+        tank_delay(
+            self.tank_ids.len(),
+            us_frame_timestamp,
+            &mut self.tank_states[..],
+        );
 
         // process tank AI
         let push = tank_ai(
-            tanks,
+            self.tank_ids.len(),
             us_frame_timestamp,
             &self.tank_positions[..],
             &mut self.tank_directions[..],
@@ -180,9 +181,8 @@ impl State {
 
         // process push
         tank_push(
-            tanks,
-            us_frame_timestamp,
             push,
+            us_frame_timestamp,
             &mut self.static_block_types,
             &self.tank_positions,
             &self.tank_directions,
@@ -191,11 +191,19 @@ impl State {
 
         // process tank movement
         tank_movement(
-            tanks,
+            self.tank_ids.len(),
             us_frame_timestamp,
             &mut self.tank_positions[..],
             &self.tank_directions[..],
             &mut self.tank_states[..],
+        );
+
+        // sliding block movement
+        sliding_block_movement(
+            self.sliding_block_ids.len(),
+            dt,
+            &mut self.sliding_block_positions[..],
+            &self.sliding_block_directions[..],
         );
     }
 

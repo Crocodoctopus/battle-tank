@@ -90,6 +90,11 @@ pub fn tank_push(
     tank_positions: &(impl Index<usize, Output = Vec2f> + ?Sized),
     tank_directions: &(impl Index<usize, Output = Direction> + ?Sized),
     tank_states: &mut (impl IndexMut<usize, Output = TankState> + ?Sized),
+    id_counter: &mut u32,
+    sliding_block_ids: &mut Vec<u32>,
+    sliding_block_positions: &mut Vec<Vec2f>,
+    sliding_block_directions: &mut Vec<Direction>,
+    sliding_block_types: &mut Vec<BlockType>,
 ) {
     let ms_timestamp = (us_timestamp / 1000) as u16;
 
@@ -108,8 +113,14 @@ pub fn tank_push(
         match static_block_types[(block_x, block_y)] {
             // normal blocks can always be pushed
             Some(BlockType::Normal) => {
+                let id = *id_counter;
+                *id_counter += 1;
+
                 static_block_types[(block_x, block_y)] = None;
-                // push sliding BlockType::Normal
+                sliding_block_ids.push(id);
+                sliding_block_positions.push(Vec2(block_x as f32 * 16., block_y as f32 * 16.));
+                sliding_block_directions.push(direction);
+                sliding_block_types.push(BlockType::Normal);
             }
             // push if direction ==, otherwise destroy
             Some(BlockType::OneWay(_block_direction)) => {

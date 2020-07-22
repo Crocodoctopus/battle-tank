@@ -29,6 +29,9 @@ pub(super) struct State {
     // static blocks
     static_block_types: Array2D<Option<BlockType>>,
 
+    // id counter
+    id_counter: u32,
+
     // sliding blocks
     sliding_block_ids: Vec<u32>,
     sliding_block_positions: Vec<Vec2f>,
@@ -93,6 +96,8 @@ impl State {
             camera: Vec4(0f32, 0f32, 160f32, 144f32),
             rem_time: 66,
             rem_tanks: 8,
+
+            id_counter: 0,
 
             static_block_types,
 
@@ -162,16 +167,16 @@ impl State {
         tank_delay(
             self.tank_ids.len(),
             us_frame_timestamp,
-            &mut self.tank_states[..],
+            &mut self.tank_states,
         );
 
         // process tank AI
         let push = tank_ai(
             self.tank_ids.len(),
             us_frame_timestamp,
-            &self.tank_positions[..],
-            &mut self.tank_directions[..],
-            &mut self.tank_states[..],
+            &self.tank_positions,
+            &mut self.tank_directions,
+            &mut self.tank_states,
             self.zkey_down & !self.zkey_was_down,
             self.upkey_down,
             self.downkey_down,
@@ -186,25 +191,45 @@ impl State {
             &mut self.static_block_types,
             &self.tank_positions,
             &self.tank_directions,
-            &mut self.tank_states[..],
+            &mut self.tank_states,
+            &mut self.id_counter,
+            &mut self.sliding_block_ids,
+            &mut self.sliding_block_positions,
+            &mut self.sliding_block_directions,
+            &mut self.sliding_block_types,
         );
 
         // process tank movement
         tank_movement(
             self.tank_ids.len(),
             us_frame_timestamp,
-            &mut self.tank_positions[..],
-            &self.tank_directions[..],
-            &mut self.tank_states[..],
+            &mut self.tank_positions,
+            &self.tank_directions,
+            &mut self.tank_states,
         );
 
         // sliding block movement
         sliding_block_movement(
             self.sliding_block_ids.len(),
             dt,
-            &mut self.sliding_block_positions[..],
-            &self.sliding_block_directions[..],
+            &mut self.sliding_block_positions,
+            &self.sliding_block_directions,
         );
+
+        /////////////////////////////////////////////////
+        //
+        /*for ((x, y), dir) in p {
+            // swap block
+            let b = self.static_block_types[(x, y)].unwrap();
+            self.static_block_types[(x, y)] = None;
+
+            // push sliding block
+            self.sliding_block_ids.push(0);
+            self.sliding_block_positions
+                .push(Vec2((x * 16) as f32, (y * 16) as f32));
+            self.sliding_block_directions.push(dir);
+            self.sliding_block_types.push(b);
+        }*/
     }
 
     pub(super) fn post_step(&mut self, _timestamp: u64) {}

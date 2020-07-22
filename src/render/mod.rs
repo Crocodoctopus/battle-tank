@@ -80,6 +80,27 @@ pub fn render_thread(window: ContextWrapper<NotCurrent, Window>, render_r: Recei
                 }
             });
 
+        // sliding blocks
+        for index in 0..frame.sliding_block_positions.len() {
+            // xy
+            let x = frame.sliding_block_positions[index].0;
+            let y = frame.sliding_block_positions[index].1;
+            xy_data[sprite_counter * 4 + 0] = (x + 0., y + 0.);
+            xy_data[sprite_counter * 4 + 1] = (x + 16., y + 0.);
+            xy_data[sprite_counter * 4 + 2] = (x + 16., y + 16.);
+            xy_data[sprite_counter * 4 + 3] = (x + 0., y + 16.);
+
+            // uv
+            let Vec2(u, v) = crate::update::misc::block_to_uv(frame.sliding_block_types[index]);
+            uv_data[sprite_counter * 4 + 0] = (u + 0. + 0.05, v + 0. + 0.05);
+            uv_data[sprite_counter * 4 + 1] = (u + 16. - 0.05, v + 0. + 0.05);
+            uv_data[sprite_counter * 4 + 2] = (u + 16. - 0.05, v + 16. - 0.05);
+            uv_data[sprite_counter * 4 + 3] = (u + 0. + 0.05, v + 16. - 0.05);
+
+            // advance sprite counter
+            sprite_counter += 1;
+        }
+
         // tanks
         for index in 0..frame.tank_positions.len() {
             // fill xy data for tanks

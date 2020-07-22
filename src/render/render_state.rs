@@ -13,6 +13,10 @@ pub struct RenderState {
     pub static_blocks_offset: Vec2f,
     pub static_block_types: Array2D<Option<BlockType>>,
 
+    // sliding blocks
+    pub sliding_block_positions: Box<[Vec2f]>,
+    pub sliding_block_types: Box<[BlockType]>,
+
     // tanks
     pub tank_positions: Box<[Vec2f]>,
     pub tank_directions: Box<[Direction]>,

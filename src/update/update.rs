@@ -29,6 +29,12 @@ pub(super) struct State {
     // static blocks
     static_block_types: Array2D<Option<BlockType>>,
 
+    // sliding blocks
+    sliding_block_ids: Vec<u32>,
+    sliding_block_positions: Vec<Vec2f>,
+    sliding_block_directions: Vec<Direction>,
+    sliding_block_types: Vec<BlockType>,
+
     // tanks
     tank_ids: Vec<u32>,
     tank_positions: Vec<Vec2f>,
@@ -61,8 +67,13 @@ impl State {
             ]),
         );
 
+        let sliding_block_ids = vec![0];
+        let sliding_block_positions = vec![Vec2(0., 64.)];
+        let sliding_block_directions = vec![Direction::Right];
+        let sliding_block_types = vec![BlockType::Normal];
+
         let tank_ids = vec![0];
-        let tank_positions = vec![Vec2(16f32, 16f32)];
+        let tank_positions = vec![Vec2(16., 16.)];
         let tank_directions = vec![Direction::Up];
         let tank_states = vec![TankState::Idle];
 
@@ -84,6 +95,11 @@ impl State {
             rem_tanks: 8,
 
             static_block_types,
+
+            sliding_block_ids,
+            sliding_block_positions,
+            sliding_block_directions,
+            sliding_block_types,
 
             tank_ids,
             tank_positions,
@@ -202,6 +218,9 @@ impl State {
 
             static_blocks_offset: Vec2((x1 * 16) as f32, (y1 * 16) as f32),
             static_block_types,
+
+            sliding_block_positions: self.sliding_block_positions.clone().into_boxed_slice(),
+            sliding_block_types: self.sliding_block_types.clone().into_boxed_slice(),
 
             tank_positions: self.tank_positions.clone().into_boxed_slice(),
             tank_directions: self.tank_directions.clone().into_boxed_slice(),

@@ -171,12 +171,9 @@ impl State {
         );
 
         // process tank AI
-        let push = tank_ai(
+        let (push, mov) = tank_ai(
             self.tank_ids.len(),
-            us_frame_timestamp,
-            &self.tank_positions,
-            &mut self.tank_directions,
-            &mut self.tank_states,
+            &self.tank_states,
             self.zkey_down & !self.zkey_was_down,
             self.upkey_down,
             self.downkey_down,
@@ -185,7 +182,7 @@ impl State {
         );
 
         // process push
-        tank_push(
+        tank_push_command(
             push,
             us_frame_timestamp,
             &mut self.static_block_types,
@@ -199,12 +196,22 @@ impl State {
             &mut self.sliding_block_types,
         );
 
+        // process tank move
+        tank_move_command(
+            mov,
+            us_frame_timestamp,
+            &self.tank_positions,
+            &mut self.tank_directions,
+            &mut self.tank_states,
+            &self.static_block_types,
+        );
+
         // process tank movement
         tank_movement(
             self.tank_ids.len(),
             us_frame_timestamp,
             &mut self.tank_positions,
-            &self.tank_directions,
+            &mut self.tank_directions,
             &mut self.tank_states,
         );
 
@@ -215,21 +222,6 @@ impl State {
             &mut self.sliding_block_positions,
             &self.sliding_block_directions,
         );
-
-        /////////////////////////////////////////////////
-        //
-        /*for ((x, y), dir) in p {
-            // swap block
-            let b = self.static_block_types[(x, y)].unwrap();
-            self.static_block_types[(x, y)] = None;
-
-            // push sliding block
-            self.sliding_block_ids.push(0);
-            self.sliding_block_positions
-                .push(Vec2((x * 16) as f32, (y * 16) as f32));
-            self.sliding_block_directions.push(dir);
-            self.sliding_block_types.push(b);
-        }*/
     }
 
     pub(super) fn post_step(&mut self, _timestamp: u64) {}

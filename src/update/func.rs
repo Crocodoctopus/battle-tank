@@ -30,19 +30,18 @@ pub fn tank_delay(
 
 pub fn tank_ai(
     tanks: usize,
-    us_timestamp: u64,
-    tank_positions: &(impl Index<usize, Output = Vec2f> + ?Sized),
-    tank_directions: &mut (impl IndexMut<usize, Output = Direction> + ?Sized),
-    tank_states: &mut (impl IndexMut<usize, Output = TankState> + ?Sized),
+    tank_states: &(impl Index<usize, Output = TankState> + ?Sized),
     zkey_down: bool,
     upkey_down: bool,
     downkey_down: bool,
     leftkey_down: bool,
     rightkey_down: bool,
-) -> impl Iterator<Item = usize> {
-    let ms_timestamp = (us_timestamp / 1000) as u16;
-
-    let mut v = Vec::new();
+) -> (
+    impl Iterator<Item = usize>,
+    impl Iterator<Item = (usize, Direction)>,
+) {
+    let mut push = vec![];
+    let mut mov = vec![];
 
     for index in 0..tanks {
         // skip non-idle tanks
@@ -53,7 +52,7 @@ pub fn tank_ai(
 
         //
         if zkey_down {
-            v.push(index);
+            push.push(index);
             continue;
         }
 
@@ -71,19 +70,15 @@ pub fn tank_ai(
         };
 
         if let Some(dir) = mdir {
-            tank_states[index] = TankState::Moving {
-                timestamp: ms_timestamp,
-                duration: 400,
-                start: tank_positions[index],
-            };
-            tank_directions[index] = dir;
+            mov.push((index, dir));
+            continue;
         }
     }
 
-    v.into_iter()
+    (push.into_iter(), mov.into_iter())
 }
 
-pub fn tank_push(
+pub fn tank_push_command(
     push: impl Iterator<Item = usize>,
     us_timestamp: u64,
     static_block_types: &mut (impl IndexMut<(usize, usize), Output = Option<BlockType>> + ?Sized),
@@ -139,11 +134,47 @@ pub fn tank_push(
     }
 }
 
+pub fn tank_move_command(
+    mov: impl Iterator<Item = (usize, Direction)>,
+    us_timestamp: u64,
+    tank_positions: &(impl Index<usize, Output = Vec2f> + ?Sized),
+    tank_directions: &mut (impl IndexMut<usize, Output = Direction> + ?Sized),
+    tank_states: &mut (impl IndexMut<usize, Output = TankState> + ?Sized),
+    static_block_types: &(impl Index<(usize, usize), Output = Option<BlockType>> + ?Sized),
+) {
+    let ms_timestamp = (us_timestamp / 1000) as u16;
+
+    for (index, dir) in mov {
+        let pos = tank_positions[index];
+        let udir = dir.vec2f();
+        let utan = Vec2(udir.1, udir.0);
+
+        let tar = pos + Vec2(8., 8.) + udir * 9.;
+        let Vec2(tx1, ty1) = tar + utan;
+        let Vec2(tx2, ty2) = tar - utan;
+
+        let b1 = static_block_types[(tx1 as usize / 16, ty1 as usize / 16)];
+        let b2 = static_block_types[(tx2 as usize / 16, ty2 as usize / 16)];
+
+        match (b1, b2) {
+            (None, None) => {}
+            _ => continue,
+        }
+
+        tank_directions[index] = dir;
+        tank_states[index] = TankState::Moving {
+            timestamp: ms_timestamp,
+            duration: 400,
+            start: tank_positions[index],
+        }
+    }
+}
+
 pub fn tank_movement(
     tanks: usize,
     us_timestamp: u64,
     tank_positions: &mut (impl IndexMut<usize, Output = Vec2f> + ?Sized),
-    tank_directions: &(impl Index<usize, Output = Direction> + ?Sized),
+    tank_directions: &mut (impl IndexMut<usize, Output = Direction> + ?Sized),
     tank_states: &mut (impl IndexMut<usize, Output = TankState> + ?Sized),
 ) {
     let ms_timestamp = (us_timestamp / 1000) as u16;

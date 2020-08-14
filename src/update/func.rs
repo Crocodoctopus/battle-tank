@@ -94,38 +94,47 @@ pub fn tank_push_command(
     let ms_timestamp = (us_timestamp / 1000) as u16;
 
     for index in push {
-        // position/direction
-        let position = tank_positions[index];
-        let direction = tank_directions[index];
+        // position and unit direction
+        let pos = tank_positions[index];
+        let udir = tank_directions[index].vec2f();
 
-        // integer position/direction
-        let dir = direction.vec2f();
-        let (block_x, block_y) = (
-            (position.0 / 16. + dir.0) as usize,
-            (position.1 / 16. + dir.1) as usize,
-        );
+        // get the center of the 2 blocks
+        let tar = pos + Vec2(8., 8.) + udir * 9.; // the location of the push
+        let Vec2(tx1, ty1) = tar + Vec2(udir.1, udir.0);
+        let Vec2(tx2, ty2) = tar - Vec2(udir.1, udir.0);
 
-        match static_block_types[(block_x, block_y)] {
-            // normal blocks can always be pushed
-            Some(BlockType::Normal) => {
-                let id = *id_counter;
-                *id_counter += 1;
-
-                static_block_types[(block_x, block_y)] = None;
-                sliding_block_ids.push(id);
-                sliding_block_positions.push(Vec2(block_x as f32 * 16., block_y as f32 * 16.));
-                sliding_block_directions.push(direction);
-                sliding_block_types.push(BlockType::Normal);
-            }
-            // push if direction ==, otherwise destroy
-            Some(BlockType::OneWay(_block_direction)) => {
-                static_block_types[(block_x, block_y)] = None;
-                //if direction == block_direction {
-                // push sliding BlockType::OneWay
-                //}
-            }
-            _ => continue,
+        // get the two blocks at (txN, tyN)
+        let b1_pos = (tx1 as usize / 16, ty1 as usize / 16);
+        let b2_pos = (tx2 as usize / 16, ty2 as usize / 16);
+        let b1 = static_block_types[b1_pos];
+        let b2 = if b1_pos == b2_pos {
+            None
+        } else {
+            static_block_types[b2_pos]
         };
+
+        //
+        let (b, (x, y)) = match (b1, b2) {
+            // if both blocks exist or don't exist
+            (None, None) => continue,
+            (Some(_), Some(_)) => continue,
+            // if either block is Solid
+            (_, Some(BlockType::Solid)) => continue,
+            (Some(BlockType::Solid), _) => continue,
+            // otherwise
+            (None, Some(blk)) => (blk, b2_pos),
+            (Some(blk), None) => (blk, b1_pos),
+        };
+
+        // do stuff
+        let id = *id_counter;
+        *id_counter += 1;
+
+        sliding_block_ids.push(id);
+        sliding_block_positions.push(Vec2((x * 16) as f32, (y * 16) as f32));
+        sliding_block_directions.push(tank_directions[index]);
+        sliding_block_types.push(b);
+        static_block_types[(x, y)] = None;
 
         tank_states[index] = TankState::Delayed {
             timestamp: ms_timestamp,
@@ -156,12 +165,15 @@ pub fn tank_move_command(
         let b1 = static_block_types[(tx1 as usize / 16, ty1 as usize / 16)];
         let b2 = static_block_types[(tx2 as usize / 16, ty2 as usize / 16)];
 
+        // always set direction
+        tank_directions[index] = dir;
+
         match (b1, b2) {
             (None, None) => {}
             _ => continue,
         }
 
-        tank_directions[index] = dir;
+        // set moving state
         tank_states[index] = TankState::Moving {
             timestamp: ms_timestamp,
             duration: 400,
